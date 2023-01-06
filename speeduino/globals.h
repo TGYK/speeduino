@@ -628,6 +628,16 @@ extern byte resetControl; ///< resetControl needs to be here (as global) because
 extern volatile byte TIMER_mask;
 extern volatile byte LOOP_TIMER;
 
+extern bool STEP_TEST_ACTIVE;
+extern bool STEP_TEST_REINIT;
+extern byte STEP_TEST_STEPS;
+extern byte STEP_TEST_ONTIME;
+extern byte STEP_TEST_OFFTIME;
+extern bool STEP_TEST_DIR_FORWARD;
+extern int STEP_TEST_PREV_STEP_TIME_US;
+extern int STEP_TEST_PREV_COOL_TIME_US;
+
+
 //These functions all do checks on a pin to determine if it is already in use by another (higher importance) function
 #define pinIsInjector(pin)  ( ((pin) == pinInjector1) || ((pin) == pinInjector2) || ((pin) == pinInjector3) || ((pin) == pinInjector4) || ((pin) == pinInjector5) || ((pin) == pinInjector6) || ((pin) == pinInjector7) || ((pin) == pinInjector8) )
 #define pinIsIgnition(pin)  ( ((pin) == pinCoil1) || ((pin) == pinCoil2) || ((pin) == pinCoil3) || ((pin) == pinCoil4) || ((pin) == pinCoil5) || ((pin) == pinCoil6) || ((pin) == pinCoil7) || ((pin) == pinCoil8) )

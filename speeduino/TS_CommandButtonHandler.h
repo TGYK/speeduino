@@ -57,6 +57,8 @@
 #define TS_CMD_IGN8_OFF   791
 #define TS_CMD_IGN8_50PC  792
 
+#define TS_CMD_STEPTEST   1792
+
 #define TS_CMD_STM32_REBOOT     12800
 #define TS_CMD_STM32_BOOTLOADER 12801
 
@@ -72,3 +74,4 @@
 
 /* the maximum id number is 65,535 */
 void TS_CommandButtonsHandler(uint16_t buttonCommand);
+void TS_CommandButtonsHandler(uint16_t buttonCommand, uint8_t *stepTestParams);

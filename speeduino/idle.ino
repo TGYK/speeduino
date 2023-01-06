@@ -393,6 +393,39 @@ static inline byte isStepperHomed(void)
 
 void idleControl(void)
 {
+  if(STEP_TEST_ACTIVE){
+    if(currentStatus.RPM == 0 && STEP_TEST_STEPS > 0){
+      //Set on/off times
+      iacCoolTime_uS = STEP_TEST_OFFTIME * 1000;
+      iacStepTime_uS = STEP_TEST_ONTIME * 1000;
+      //Set step directions non-inverted for test
+      idleStepper.moreAirDirection = STEPPER_BACKWARD;
+      idleStepper.lessAirDirection = STEPPER_FORWARD;
+      if(!checkForStepping()){ //If not stepping (Also performs cycle-off/cooldown)
+        //Here we do an altered doStep()
+        //We don't want to worry about step count min/max, just to perform the step
+        if(STEP_TEST_DIR_FORWARD){
+          digitalWrite(pinStepperDir, idleStepper.lessAirDirection);
+        } else {
+          digitalWrite(pinStepperDir, idleStepper.moreAirDirection);
+        }
+        digitalWrite(pinStepperEnable, LOW); //Enable the DRV8825
+        digitalWrite(pinStepperStep, HIGH); //Do the step
+        idleStepper.stepStartTime = micros_safe(); //Set start time
+        idleStepper.stepperStatus = STEPPING; //Set status for checkForSteepping()
+        STEP_TEST_STEPS--; //Decrement overall amount of steps
+      }
+      return; //Break the loop early.. Poor practice but works for testing.
+    } else if(STEP_TEST_STEPS == 0 || currentStatus.RPM > 0){ //Out of steps or RPM greater than 0.. End test
+      STEP_TEST_ACTIVE = false;
+      if(STEP_TEST_REINIT){
+        initialiseIdle(false); //<If test is done, reinit IAC
+        STEP_TEST_REINIT = false;
+      }
+      return; //Break the loop early.. Poor practice but works for testing.
+    }
+  }
+
   if( idleInitComplete != configPage6.iacAlgorithm) { initialiseIdle(false); }
   if( (currentStatus.RPM > 0) || (configPage6.iacPWMrun == true) ) { enableIdle(); }
 

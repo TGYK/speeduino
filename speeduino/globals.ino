@@ -161,6 +161,15 @@ volatile byte HWTest_IGN = 0; /**< Each bit in this variable represents one of t
 volatile byte HWTest_IGN_50pc = 0; 
 byte maxIgnOutputs = 1; /**< Used for rolling rev limiter to indicate how many total ignition channels should currently be firing */
 
+bool STEP_TEST_ACTIVE = false;
+bool STEP_TEST_REINIT = false;
+byte STEP_TEST_STEPS = 0;
+byte STEP_TEST_ONTIME = 0;
+byte STEP_TEST_OFFTIME = 0;
+bool STEP_TEST_DIR_FORWARD = false;
+int STEP_TEST_PREV_STEP_TIME_US = 0;
+int STEP_TEST_PREV_COOL_TIME_US = 0;
+
 
 //This needs to be here because using the config page directly can prevent burning the setting
 byte resetControl = RESET_CONTROL_DISABLED;

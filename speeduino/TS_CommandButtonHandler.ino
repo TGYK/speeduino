@@ -11,6 +11,7 @@
 #include "sensors.h"
 #include "storage.h"
 #include "SD_logger.h"
+#include "idle.h"
 #ifdef USE_MC33810
   #include "acc_mc33810.h"
 #endif
@@ -63,6 +64,10 @@ void TS_CommandButtonsHandler(uint16_t buttonCommand)
 
       HWTest_INJ_50pc = 0;
       HWTest_IGN_50pc = 0;
+
+      STEP_TEST_ACTIVE = false;
+      STEP_TEST_REINIT = true;
+      
       break;
 
     case TS_CMD_TEST_ENBL: // cmd is enable
@@ -364,5 +369,18 @@ void TS_CommandButtonsHandler(uint16_t buttonCommand)
 
     default:
       break;
+  }
+}
+void TS_CommandButtonsHandler(uint16_t buttonCommand, uint8_t *stepTestParams)
+{
+  if(buttonCommand == TS_CMD_STEPTEST && !STEP_TEST_ACTIVE){
+    if(BIT_CHECK(currentStatus.testOutputs, 1)){
+      STEP_TEST_ONTIME = stepTestParams[0];
+      STEP_TEST_OFFTIME = stepTestParams[1];
+      STEP_TEST_STEPS = stepTestParams[2];
+      STEP_TEST_DIR_FORWARD = (stepTestParams[3] & 0x00) ? true : false;
+      STEP_TEST_ACTIVE = true;
+      STEP_TEST_REINIT = true;
+    }
   }
 }

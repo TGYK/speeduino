@@ -280,10 +280,17 @@ void processSerialCommand(void)
     {
       uint16_t cmdCombined = word(serialPayload[1], serialPayload[2]);
 
-      if ( ((cmdCombined >= TS_CMD_INJ1_ON) && (cmdCombined <= TS_CMD_IGN8_50PC)) || (cmdCombined == TS_CMD_TEST_ENBL) || (cmdCombined == TS_CMD_TEST_DSBL) )
+      if ( ((cmdCombined >= TS_CMD_INJ1_ON) && (cmdCombined <= TS_CMD_STEPTEST)) || (cmdCombined == TS_CMD_TEST_ENBL) || (cmdCombined == TS_CMD_TEST_DSBL) )
       {
         //Hardware test buttons
-        if (currentStatus.RPM == 0) { TS_CommandButtonsHandler(cmdCombined); }
+        if(currentStatus.RPM == 0 && cmdCombined == TS_CMD_STEPTEST){
+          uint8_t stepTestParams[4];
+          stepTestParams[0] = serialPayload[3]; //<Step time
+          stepTestParams[1] = serialPayload[4]; //<Step cooldown
+          stepTestParams[2] = serialPayload[5]; //<Step count
+          stepTestParams[3] = serialPayload[6]; //<Step direction
+          TS_CommandButtonsHandler(cmdCombined, stepTestParams);
+        } else if (currentStatus.RPM == 0) { TS_CommandButtonsHandler(cmdCombined); }
       }
       else if( (cmdCombined >= TS_CMD_VSS_60KMH) && (cmdCombined <= TS_CMD_VSS_RATIO6) )
       {
