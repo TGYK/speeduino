@@ -237,6 +237,7 @@ byte pinLaunch;
 byte pinIgnBypass; //The pin used for an ignition bypass (Optional)
 byte pinFlex; //Pin with the flex sensor attached
 byte pinVSS;  // VSS (Vehicle speed sensor) Pin
+byte pinKnock; // Pin that the knock controller is attached to
 byte pinBaro; //Pin that an al barometric pressure sensor is attached to (If used)
 byte pinResetControl; // Output pin used control resetting the Arduino
 byte pinFuelPressure;

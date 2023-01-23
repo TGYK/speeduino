@@ -333,6 +333,9 @@
 #define KNOCK_MODE_DIGITAL  1
 #define KNOCK_MODE_ANALOG   2
 
+#define KNOCK_TRIGGER_RISING  0
+#define KNOCK_TRIGGER_FALLING 1
+
 #define FUEL2_MODE_OFF      0
 #define FUEL2_MODE_MULTIPLY 1
 #define FUEL2_MODE_ADD      2
@@ -737,6 +740,7 @@ struct statuses {
   volatile byte syncLossCounter;
   byte knockRetard;
   bool knockActive;
+  bool knockRecovery;
   bool toothLogEnabled;
   bool compositeLogEnabled;
   int16_t vvt1Angle; //Has to be a long for PID calcs (CL VVT control)
@@ -1560,6 +1564,7 @@ extern byte pinLaunch;
 extern byte pinIgnBypass; //The pin used for an ignition bypass (Optional)
 extern byte pinFlex; //Pin with the flex sensor attached
 extern byte pinVSS; 
+extern byte pinKnock;
 extern byte pinBaro; //Pin that an external barometric pressure sensor is attached to (If used)
 extern byte pinResetControl; // Output pin used control resetting the Arduino
 extern byte pinFuelPressure;

@@ -84,6 +84,7 @@ uint16_t getSpeed(void);
 byte getGear(void);
 byte getFuelPressure(void);
 byte getOilPressure(void);
+void knockPulse(void);
 uint16_t readAuxanalog(uint8_t analogPin);
 uint16_t readAuxdigital(uint8_t digitalPin);
 void readCLT(bool useFilter=true); //Allows the option to override the use of the filter

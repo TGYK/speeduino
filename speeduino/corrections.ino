@@ -51,6 +51,10 @@ uint8_t aseTaper;
 uint8_t dfcoTaper;
 uint8_t idleAdvTaper;
 uint8_t crankingEnrichTaper;
+byte knockRetard;
+uint8_t knockSteps;
+uint8_t knockRecoverySteps;
+
 
 /** Initialise instances and vars related to corrections (at ECU boot-up).
  */
@@ -61,6 +65,10 @@ void initialiseCorrections(void)
   currentStatus.egoCorrection = 100; //Default value of no adjustment must be set to avoid randomness on first correction cycle after startup
   AFRnextCycle = 0;
   currentStatus.knockActive = false;
+  currentStatus.knockRecovery = false;
+  knockRetard = 0;
+  knockSteps = 0;
+  knockRecoverySteps = 0;
   currentStatus.battery10 = 125; //Set battery voltage to sensible value for dwell correction for "flying start" (else ignition gets spurious pulses after boot)  
 }
 
@@ -890,8 +898,7 @@ int8_t correctionSoftFlatShift(int8_t advance)
  */
 int8_t correctionKnock(int8_t advance)
 {
-  byte knockRetard = 0;
-
+  
   //First check is to do the window calculations (Assuming knock is enabled)
   if( configPage10.knock_mode != KNOCK_MODE_OFF )
   {
@@ -899,25 +906,72 @@ int8_t correctionKnock(int8_t advance)
     knockWindowMax = knockWindowMin + table2D_getValue(&knockWindowDurationTable, currentStatus.RPMdiv100);
   }
 
-
-  if( (configPage10.knock_mode == KNOCK_MODE_DIGITAL)  )
+  if(configPage10.knock_mode == KNOCK_MODE_DIGITAL)
   {
-    //
+    //Check that knock count exceeds the threshold
     if(knockCounter > configPage10.knock_count)
     {
+      //If knock retard is active
       if(currentStatus.knockActive == true)
       {
-        //Knock retard is currently 
+        //Knock retard is currently running
+
+        //If current event is longer than max duration, start recovery
+        if((configPage10.knock_duration * 100) >= (micros() - knockStartTime))
+        {
+          knockCounter = 0;
+          currentStatus.knockActive = false;
+          //Start recovery
+          currentStatus.knockRecovery = true;
+          //Bounds check to prevent negative retard (advance)
+          (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep;
+          knockRecoverySteps = 1;
+        }
+        else
+        {
+          //If total retard is less than the max retard
+          if(knockRetard < configPage10.knock_maxRetard)
+          {
+            //If we have reached the step time, add more retard via next step
+            if((configPage10.knock_stepTime * 100) * knockSteps <= (micros() - knockStartTime))
+            {
+              //Bounds check to prevent retard over max allowed
+              (knockRetard + configPage10.knock_stepSize > configPage10.knock_maxRetard) ? knockRetard = configPage10.knock_maxRetard : knockRetard += configPage10.knock_stepSize;
+              knockSteps++;
+            }
+          }
+        }
+      }
+      else if (currentStatus.knockRecovery == true)
+      {
+        //Knock retard recovery is currently running
+
+        //Check if recovery needs to be disabled
+        if(knockRetard == 0)
+        {
+          currentStatus.knockRecovery = false;
+          knockRecoverySteps = 0;
+        } //If we have reached the step time, remove retard via next step
+        else if((((configPage10.knock_recoveryStepTime * 100) * knockRecoverySteps) + ((configPage10.knock_stepTime * 100) * knockSteps)) <= (micros() - knockStartTime))
+        {
+          //Bounds check to prevent negative retard (advance)
+          (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep;
+          knockRecoverySteps++;
+        }
       }
       else
       {
-        //Knock needs to be activated
+        //Knock retard needs to be activated
+
         lastKnockCount = knockCounter;
         knockStartTime = micros();
         knockRetard = configPage10.knock_firstStep;
+        currentStatus.knockActive = true;
+        currentStatus.knockRecovery = false; //Shouldn't be needed but safeguard
+        knockSteps = 1;
+        knockRecoverySteps = 0;
       }
     }
-
   }
 
   return advance - knockRetard;

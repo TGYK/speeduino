@@ -744,15 +744,18 @@ void flexPulse(void)
  */
 void knockPulse(void)
 {
-  //Check if this the start of a knock. 
-  if(knockCounter == 0)
-  {
-    //knockAngle = crankAngle + fastTimeToAngle( (micros() - lastCrankAngleCalc) ); 
-    knockStartTime = micros();
-    knockCounter = 1;
+  int crankAngle = getCrankAngle();
+  //Check that pulse is within the valid window to be counted
+  if(crankAngle >= knockWindowMin && crankAngle <= knockWindowMax){
+    //Check if this the start of a knock. 
+    if(knockCounter == 0)
+    {
+      //knockAngle = crankAngle + fastTimeToAngle( (micros() - lastCrankAngleCalc) ); 
+      knockStartTime = micros();
+      knockCounter = 1;
+    }
+    else { ++knockCounter; } //Knock has already started, so just increment the counter for this
   }
-  else { ++knockCounter; } //Knock has already started, so just increment the counter for this
-
 }
 
 /**

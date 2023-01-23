@@ -362,6 +362,10 @@ void initialiseAll(void)
     {
       attachInterrupt(digitalPinToInterrupt(pinVSS), vssPulse, RISING);
     }
+    if(configPage10.knock_mode == KNOCK_MODE_DIGITAL)
+    {
+      attachInterrupt(digitalPinToInterrupt(pinKnock), knockPulse, (configPage10.knock_trigger == KNOCK_TRIGGER_RISING) ? RISING : FALLING);
+    }
 
     //Once the configs have been loaded, a number of one time calculations can be completed
     req_fuel_uS = configPage2.reqFuel * 100; //Convert to uS and an int. This is the only variable to be used in calculations
@@ -1385,6 +1389,7 @@ void setPinMapping(byte boardID)
       pinWMIEmpty = 46;
       pinWMIIndicator = 44;
       pinWMIEnabled = 42;
+      pinKnock = 21;
 
       #if defined(CORE_TEENSY35)
         pinInjector6 = 51;
