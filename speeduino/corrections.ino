@@ -916,16 +916,43 @@ int8_t correctionKnock(int8_t advance)
       {
         //Knock retard is currently running
 
-        //If current event is longer than max duration, start recovery
+        //If current event is longer than max duration
         if((configPage10.knock_duration * 100) >= (micros() - knockStartTime))
         {
-          knockCounter = 0;
-          currentStatus.knockActive = false;
-          //Start recovery
-          currentStatus.knockRecovery = true;
-          //Bounds check to prevent negative retard (advance)
-          (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep;
-          knockRecoverySteps = 1;
+          //If knock has stopped
+          if(lastKnockCount <= knockCounter)
+          {
+            currentStatus.knockActive = false;
+            //Start recovery
+            currentStatus.knockRecovery = true;
+            //Bounds check to prevent negative retard (advance)
+            (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep; //Might need different check due to unsigned byte data type to prevent overflow
+            knockRecoverySteps = 1;
+            lastKnockCount = knockCounter;
+          }
+          else //Knock still occurring, don't bother trying to recover
+          {
+            //Start new knock event
+            //Set the knock counter to the number of knocks occured since last ignition correction calculation to prevent overflow
+            //during continually-resetting events where knock does not stop happening
+            knockCounter -= lastKnockCount;
+            lastKnockCount = knockCounter;
+            knockStartTime = micros();
+            //If the current retard level is less than the first step
+            if(knockRetard < configPage10.knock_firstStep)
+            {
+              knockRetard = configPage10.knock_firstStep;
+            }
+            else
+            {
+              //Use next step instead of first step
+              (knockRetard + configPage10.knock_stepSize > configPage10.knock_maxRetard) ? knockRetard = configPage10.knock_maxRetard : knockRetard += configPage10.knock_stepSize;
+            }
+            currentStatus.knockActive = true;
+            currentStatus.knockRecovery = false;
+            knockSteps = 1;
+            knockRecoverySteps = 0;
+          }
         }
         else
         {
@@ -935,9 +962,14 @@ int8_t correctionKnock(int8_t advance)
             //If we have reached the step time, add more retard via next step
             if((configPage10.knock_stepTime * 100) * knockSteps <= (micros() - knockStartTime))
             {
-              //Bounds check to prevent retard over max allowed
-              (knockRetard + configPage10.knock_stepSize > configPage10.knock_maxRetard) ? knockRetard = configPage10.knock_maxRetard : knockRetard += configPage10.knock_stepSize;
-              knockSteps++;
+              //If knock is still occuring
+              if(lastKnockCount < knockCounter)
+              {
+                //Bounds check to prevent retard over max allowed
+                (knockRetard + configPage10.knock_stepSize > configPage10.knock_maxRetard) ? knockRetard = configPage10.knock_maxRetard : knockRetard += configPage10.knock_stepSize;
+                lastKnockCount = knockCounter;
+                knockSteps++;
+              }
             }
           }
         }
@@ -949,14 +981,46 @@ int8_t correctionKnock(int8_t advance)
         //Check if recovery needs to be disabled
         if(knockRetard == 0)
         {
-          currentStatus.knockRecovery = false;
-          knockRecoverySteps = 0;
-        } //If we have reached the step time, remove retard via next step
+          currentStatus.knockActive = false; //Shouldn't be needed but safeguard
+          currentStatus.knockRecovery = false; //Disable recovery
+          knockCounter = 0; //Reset counter
+          knockSteps = 0; //Reset steps
+          knockRecoverySteps = 0; //Reset steps
+        } //If we have reached the step time, remove retard via next step if knock is still not occurring
         else if((((configPage10.knock_recoveryStepTime * 100) * knockRecoverySteps) + ((configPage10.knock_stepTime * 100) * knockSteps)) <= (micros() - knockStartTime))
         {
-          //Bounds check to prevent negative retard (advance)
-          (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep;
-          knockRecoverySteps++;
+          //If knock is still not occurring
+          if(lastKnockCount >= knockCounter)
+          {
+            //Bounds check to prevent negative retard (advance)
+            (knockRetard - configPage10.knock_recoveryStep <= 0) ? knockRetard = 0 : knockRetard -= configPage10.knock_recoveryStep; //Might need different check due to unsigned byte data type to prevent overflow
+            lastKnockCount = knockCounter;
+            knockRecoverySteps++;
+          }
+          else //Knock has occurred during recovery
+          {
+            //Start new knock event
+
+            //Set the knock counter to the number of knocks occured since last ignition correction calculation to prevent overflow
+            //during continually-resetting events where knock does not stop happening
+            knockCounter -= lastKnockCount;
+            lastKnockCount = knockCounter;
+            knockStartTime = micros();
+            //If the current retard level is less than the first step
+            if(knockRetard < configPage10.knock_firstStep)
+            {
+              knockRetard = configPage10.knock_firstStep;
+            }
+            else
+            {
+              //Use next step instead of first step
+              (knockRetard + configPage10.knock_stepSize > configPage10.knock_maxRetard) ? knockRetard = configPage10.knock_maxRetard : knockRetard += configPage10.knock_stepSize;
+            }
+            currentStatus.knockActive = true;
+            currentStatus.knockRecovery = false;
+            knockSteps = 1;
+            knockRecoverySteps = 0;
+          }
         }
       }
       else
