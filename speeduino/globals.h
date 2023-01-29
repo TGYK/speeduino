@@ -226,7 +226,7 @@
 #define BIT_STATUS4_VVT2_ERROR    2 //VVT2 cam angle within limits or not
 #define BIT_STATUS4_FAN           3 //Fan Status
 #define BIT_STATUS4_BURNPENDING   4
-#define BIT_STATUS4_UNUSED6       5
+#define BIT_STATUS4_KNOCKACTIVE   5
 #define BIT_STATUS4_UNUSED7       6
 #define BIT_STATUS4_UNUSED8       7
 
@@ -739,7 +739,7 @@ struct statuses {
   bool fuelPumpOn; /**< Indicator showing the current status of the fuel pump */
   volatile byte syncLossCounter;
   byte knockRetard;
-  bool knockActive;
+  //bool knockActive;
   bool knockRecovery;
   bool toothLogEnabled;
   bool compositeLogEnabled;

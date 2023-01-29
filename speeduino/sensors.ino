@@ -746,15 +746,17 @@ void knockPulse(void)
 {
   int crankAngle = getCrankAngle();
   //Check that pulse is within the valid window to be counted
-  if(crankAngle >= knockWindowMin && crankAngle <= knockWindowMax){
-    //Check if this the start of a knock. 
-    if(knockCounter == 0)
+  if(crankAngle >= knockWindowMin && crankAngle <= knockWindowMax)
+  {
+    //Check that we are less than max allowed MAP
+    if(currentStatus.MAP < configPage10.knock_maxMAP)
     {
-      //knockAngle = crankAngle + fastTimeToAngle( (micros() - lastCrankAngleCalc) ); 
-      knockStartTime = micros();
-      knockCounter = 1;
+      //Check that we are less than max allowed RPM
+      if(currentStatus.RPMdiv100 < configPage10.knock_maxRPM)
+      {
+        knockCounter++;
+      }
     }
-    else { ++knockCounter; } //Knock has already started, so just increment the counter for this
   }
 }
 
