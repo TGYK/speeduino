@@ -739,7 +739,6 @@ struct statuses {
   bool fuelPumpOn; /**< Indicator showing the current status of the fuel pump */
   volatile byte syncLossCounter;
   byte knockRetard;
-  //bool knockActive;
   bool knockRecovery;
   bool toothLogEnabled;
   bool compositeLogEnabled;

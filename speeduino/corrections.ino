@@ -52,8 +52,6 @@ uint8_t dfcoTaper;
 uint8_t idleAdvTaper;
 uint8_t crankingEnrichTaper;
 byte knockRetard;
-//uint8_t knockSteps;
-//uint8_t knockRecoverySteps;
 unsigned long knockStepTime;
 
 
@@ -69,8 +67,6 @@ void initialiseCorrections(void)
   //currentStatus.knockActive = false;
   currentStatus.knockRecovery = false;
   knockRetard = 0;
-  //knockSteps = 0;
-  //knockRecoverySteps = 0;
   knockStepTime = 0;
   currentStatus.battery10 = 125; //Set battery voltage to sensible value for dwell correction for "flying start" (else ignition gets spurious pulses after boot)  
 }
